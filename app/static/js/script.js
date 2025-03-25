@@ -1,12 +1,53 @@
-function toggleBlock(element) {
-    element.classList.toggle('active');
+let trayStates = {};
+
+async function syncTrayStates() {
+    const response = await fetch('/api/tray-states');
+    const states = await response.json();
+    
+    Object.entries(states).forEach(([trayId, state]) => {
+        const tray = document.getElementById(trayId);
+        const cubes = tray.querySelectorAll('.ice-cube');
+        
+        cubes.forEach((cube, index) => {
+            cube.classList.remove('active', 'frozen');
+            if (state.active_cubes.includes(index)) {
+                cube.classList.add('active');
+                if (state.is_frozen) {
+                    cube.classList.add('frozen');
+                }
+            }
+        });
+        
+        const button = document.querySelector(`button[data-tray="${trayId}"]`);
+        if (state.is_frozen) {
+            button.disabled = true;
+            button.textContent = 'Tray Frozen';
+        }
+    });
+    
+    trayStates = states;
 }
 
-document.querySelectorAll('.action-button').forEach((button, index) => {
-    button.addEventListener('click', () => {
-        const trayId = `tray${index + 1}`;
-        document.querySelectorAll(`#${trayId} .ice-cube`).forEach(cube => {
-            cube.classList.remove('active');
-        });
+async function toggleBlock(element) {
+    const tray = element.closest('.ice-tray');
+    const trayId = tray.id;
+    const cubeIndex = Array.from(tray.children).indexOf(element);
+    
+    if (trayStates[trayId]?.is_frozen) return;
+    
+    const response = await fetch('/api/toggle-cube', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trayId, cubeIndex })
     });
+    
+    if (response.ok) {
+        await syncTrayStates();
+    }
+}
+
+// Poll for updates every 2 seconds
+document.addEventListener('DOMContentLoaded', () => {
+    syncTrayStates();
+    setInterval(syncTrayStates, 2000);
 });

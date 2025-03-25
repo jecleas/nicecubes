@@ -36,4 +36,7 @@ def create_app(test_config=None):
     from . import auth
     app.register_blueprint(auth.bp)
 
+    from . import ice # Import and register the ice blueprint
+    app.register_blueprint(ice.bp)
+
     return app

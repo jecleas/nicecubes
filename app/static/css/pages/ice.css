@@ -45,6 +45,24 @@
     border-color: #007bff;
 }
 
+.ice-cube.frozen {
+    position: relative;
+    pointer-events: none;
+}
+
+.ice-cube.frozen::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('../../assets/frozen.svg'); /* Fix relative path */
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
 /* Mobile Responsive */
 @media screen and (max-width: 600px) {
     .ice-tray {

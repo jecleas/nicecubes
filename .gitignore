@@ -2,6 +2,7 @@ venv/
 
 #instance folder
 instance/
+instace/app.sqlite
 
 app/*.pyc
 app/__pycache__/
