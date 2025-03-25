@@ -34,8 +34,19 @@ nav {
     background: #377ba9;
     display: flex;
     align-items: center;
-    padding: 0.5rem 1rem;
+    padding: 1rem 1rem;
     color: white;
+    gap: 2rem;
+    width: 100%;
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
 }
 
 nav h1 {
@@ -51,15 +62,34 @@ nav ul {
     padding: 0;
 }
 
-nav ul li a,
-nav ul li span {
+nav ul li  {
     display: block;
     padding: 0.5rem 1rem;
     color: white;
 }
 
-nav ul li a:hover {
+nav ul li:not(:has(a)) {
+    color: white;
+    font-weight: 500;
+}
+
+nav ul li a,
+nav ul li span {
+    text-decoration: none;
+    color: white;
+}
+
+nav ul li span:hover {
     background: #275a7c;
+}
+
+.title-link {
+    color: white;
+    text-decoration: none;
+}
+
+.title-link:hover {
+    color: white;
 }
 
 .content {
@@ -85,3 +115,71 @@ nav ul li a:hover {
     margin: 1rem 0 0.25rem 0;
 }
 
+.button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.action-button {
+    display: inline-block;
+    padding: 1rem 2rem;
+    background-color: #377ba9;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+.action-button:hover {
+    background-color: #275a7c;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .content {
+        width: 90%;
+        padding: 0.5rem;
+    }
+
+    .nav-container {
+        max-width: 100%;
+        padding: 0 1rem;
+    }
+
+    nav {
+        padding: 0.5rem;
+    }
+
+    nav h1 {
+        font-size: 1.5rem;
+    }
+
+    .welcome-section {
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .welcome-section p {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin: 1rem 0;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    html {
+        padding: 0.5rem;
+    }
+
+    .content > header h1 {
+        font-size: 1.5rem;
+    }
+
+    nav ul li a,
+    nav ul li span {
+        padding: 0.3rem 0.7rem;
+        font-size: 0.9rem;
+    }
+}

@@ -24,6 +24,20 @@ def init_db():
 
     with current_app.open_resource('schema.sql') as f:
         db.executescript(f.read().decode('utf8'))
+        
+    # Create initial users
+    try:
+        db.execute(
+            'INSERT INTO user (username) VALUES (?)',
+            ("Jeremy",)
+        )
+        db.execute(
+            'INSERT INTO user (username) VALUES (?)',
+            ("Mia",)
+        )
+        db.commit()
+    except sqlite3.IntegrityError:
+        pass  # Users already exist
 
 @click.command('init-db')
 @with_appcontext
