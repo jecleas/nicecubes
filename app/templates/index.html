@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block header %}
+    <h1>Welcome to NiceCubes</h1>
+{% endblock %}
+
+{% block content %}
+    <div class="welcome-section">
+        {% if g.user %}
+            <p>Welcome back, {{ g.user['username'] }}!</p>
+        {% else %}
+            <p>Welcome to NiceCubes! Please login or register to get started.</p>
+        {% endif %}
+    </div>
+{% endblock %}

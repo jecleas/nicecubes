@@ -1,0 +1,87 @@
+html {
+    font-family: 'Roboto', sans-serif;
+    padding: 1rem;
+    margin: 0;
+    background-color: #f5f5f5;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+h1 {
+    font-family: 'Roboto', sans-serif;
+    color: #377ba9;
+    margin: 1rem 0;
+}
+
+a {
+    color: #377ba9;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+a:hover {
+    color: #275a7c;
+}
+
+nav {
+    background: #377ba9;
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    color: white;
+}
+
+nav h1 {
+    color: white;
+    flex: auto;
+    margin: 0;
+}
+
+nav ul {
+    display: flex;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+nav ul li a,
+nav ul li span {
+    display: block;
+    padding: 0.5rem 1rem;
+    color: white;
+}
+
+nav ul li a:hover {
+    background: #275a7c;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 60%;
+    max-width: 500px;
+    padding: 1rem;
+    min-height: calc(100vh - 60px); /* Adjust based on your nav height */
+}
+
+.content > header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    text-align: center;
+}
+
+.content > header h1 {
+    flex: auto;
+    text-align: center;
+    margin: 1rem 0 0.25rem 0;
+}
+
