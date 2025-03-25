@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Unauthorized{% endblock %}
+
+{% block header %}
+  <h1>Access Denied</h1>
+{% endblock %}
+
+{% block content %}
+  <div class="unauthorized-message">
+    <p>Sorry, you don't have access to this application yet.</p>
+    <p>Please contact the administrator for access.</p>
+    <a href="{{ url_for('auth.login') }}" class="btn">Back to Login</a>
+  </div>
+{% endblock %}

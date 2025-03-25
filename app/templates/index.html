@@ -10,8 +10,11 @@
     <div class="welcome-section">
         {% if g.user %}
             <p>Welcome back, {{ g.user['username'] }}!</p>
+            <div class="button-container">
+            <a href="{{ url_for('ice') }}" class="action-button">Make Ice</a>
+            </div>
         {% else %}
-            <p>Welcome to NiceCubes! Please login or register to get started.</p>
+            <p>Welcome to NiceCubes! Please login to get started.</p>
         {% endif %}
     </div>
 {% endblock %}

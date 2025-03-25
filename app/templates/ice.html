@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Ice Cube Tray{% endblock %}
+
+{% block extra_styles %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/ice.css') }}">
+{% endblock %}
+
+{% block header %}
+  <h1>Ice Cube Trays</h1>
+{% endblock %}
+
+{% block content %}
+  <div class="ice-container">
+    <div class="tray-section">
+      <div class="ice-tray" id="tray1">
+        {% for i in range(12) %}
+          <div class="ice-cube" onclick="toggleBlock(this)"></div>
+        {% endfor %}
+      </div>
+      <div class="button-container">
+        <button class="action-button">Clear Tray 1</button>
+      </div>
+    </div>
+
+    <div class="tray-section">
+      <div class="ice-tray" id="tray2">
+        {% for i in range(12) %}
+          <div class="ice-cube" onclick="toggleBlock(this)"></div>
+        {% endfor %}
+      </div>
+      <div class="button-container">
+        <button class="action-button">Clear Tray 2</button>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% endblock %}
