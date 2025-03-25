@@ -1,7 +1,8 @@
 venv/
 
-#app instance folder
-app/instance/
+#instance folder
+instance/
+
 app/*.pyc
 app/__pycache__/
 
