@@ -16,7 +16,10 @@ tray_states = {
         'expires_at': None
     }
 }
-
+@app.route('/ice')
+def ice():
+    return render_template('ice.html')
+    
 @bp.route('/api/toggle-cube', methods=['POST'])
 def toggle_cube():
     data = request.get_json()

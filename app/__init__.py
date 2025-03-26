@@ -1,15 +1,16 @@
 from flask import Flask, render_template
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from dotenv import load_dotenv
 import os
+
+load_dotenv()
 
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
-    app.config.from_mapping(
-        SECRET_KEY='dev',
-        DATABASE=os.path.join(app.instance_path, 'app.sqlite'),
-    )
-
+    
     if test_config is None: # Load the instance config, if it exists, when not testing
-        app.config.from_pyfile('config.py', silent=True)
+        app.config['DATABASE_URL'] = os.getenv('DATABASE_URL')
     else: # Load the test config if passed in
         app.config.from_mapping(test_config)
 
@@ -18,6 +19,16 @@ def create_app(test_config=None):
     except OSError:
         pass
 
+    from . import db
+    db.init_app(app)
+    #migrate.init_app(app, db)
+
+    from . import auth #Import the auth blueprint
+    app.register_blueprint(auth.bp)
+
+    from . import ice # Import and register the ice blueprint
+    app.register_blueprint(ice.bp)
+
     @app.route('/hello')
     def hello():
         return 'Hello, World!'
@@ -25,18 +36,5 @@ def create_app(test_config=None):
     @app.route('/')
     def index():
         return render_template('index.html')
-
-    @app.route('/ice')
-    def ice():
-        return render_template('ice.html')
-
-    from . import db
-    db.init_app(app)
-
-    from . import auth
-    app.register_blueprint(auth.bp)
-
-    from . import ice # Import and register the ice blueprint
-    app.register_blueprint(ice.bp)
 
     return app

@@ -7,4 +7,9 @@ instace/app.sqlite
 app/*.pyc
 app/__pycache__/
 
+
 .DS_Store
+
+.env
+
+tests/__pycache__/

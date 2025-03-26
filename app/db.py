@@ -1,51 +1,34 @@
-import sqlite3
-import click
-from flask import current_app, g
-from flask.cli import with_appcontext
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from datetime import datetime
 
-def get_db():
-    if 'db' not in g:
-        g.db = sqlite3.connect(
-            current_app.config['DATABASE'],
-            detect_types=sqlite3.PARSE_DECLTYPES
-        )
-        g.db.row_factory = sqlite3.Row
-
-    return g.db
-
-def close_db(e=None):
-    db = g.pop('db', None)
-
-    if db is not None:
-        db.close()
+db = SQLAlchemy()
+migrate = Migrate()
 
 def init_db():
-    db = get_db()
-
-    with current_app.open_resource('schema.sql') as f:
-        db.executescript(f.read().decode('utf8'))
-        
-    # Create initial users
-    try:
-        db.execute(
-            'INSERT INTO user (username) VALUES (?)',
-            ("Jeremy",)
-        )
-        db.execute(
-            'INSERT INTO user (username) VALUES (?)',
-            ("Mia",)
-        )
-        db.commit()
-    except sqlite3.IntegrityError:
-        pass  # Users already exist
-
-@click.command('init-db')
-@with_appcontext
-def init_db_command():
-    """Clear the existing data and create new tables."""
-    init_db()
-    click.echo('Initialized the database.')
+    """Initialize the database with seed data."""
+    from app.models import User  # Import here to avoid circular imports
+    
+    with db.session.begin():
+        if not User.query.first():
+            users = [
+                User(username="Jeremy"),
+                User(username="Mia"),
+                User(username="Joanne"),
+                User(username="Olivia"),
+                User(username="Alana"),
+                User(username="Thomas")
+            ]
+            db.session.add_all(users)
 
 def init_app(app):
-    app.teardown_appcontext(close_db)
-    app.cli.add_command(init_db_command)
+    """Initialize database, migrations and seed data."""
+    app.config['SQLALCHEMY_DATABASE_URI'] = app.config.get('DATABASE_URL')
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
+    db.init_app(app)
+    migrate.init_app(app, db)
+    
+    with app.app_context():
+        db.create_all()
+        init_db()
