@@ -21,11 +21,40 @@ async function syncTrayStates() {
         const button = document.querySelector(`button[data-tray="${trayId}"]`);
         if (state.is_frozen) {
             button.disabled = true;
-            button.textContent = 'Tray Frozen';
+            button.textContent = 'Freezing...';
         }
     });
     
     trayStates = states;
+}
+
+async function freezeTray(button) {
+    const trayId = button.dataset.tray;
+    
+    try {
+        button.disabled = true;
+        button.textContent = 'Freezing...';
+        
+        const response = await fetch('/api/freeze-tray', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ trayId })
+        });
+        
+        if (response.ok) {
+            button.textContent = 'Tray Frozen';
+            await syncTrayStates();
+        } else {
+            button.disabled = false;
+            button.textContent = `Freeze ${trayId.replace('tray', 'Tray ')}`;
+        }
+    } catch (error) {
+        console.error('Error freezing tray:', error);
+        button.disabled = false;
+        button.textContent = `Freeze ${trayId.replace('tray', 'Tray ')}`;
+    }
 }
 
 async function toggleBlock(element) {

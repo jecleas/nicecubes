@@ -38,12 +38,18 @@ def toggle_cube():
 def freeze_tray():
     data = request.get_json()
     tray_id = data['trayId']
+    current_time = datetime.now()
     
     tray_states[tray_id]['is_frozen'] = True
-    tray_states[tray_id]['frozen_at'] = datetime.now()
-    tray_states[tray_id]['expires_at'] = datetime.now() + timedelta(hours=4)
+    tray_states[tray_id]['frozen_at'] = current_time
+    tray_states[tray_id]['expires_at'] = current_time + timedelta(hours=4)
     
-    return jsonify(tray_states[tray_id])
+    return jsonify({
+        'is_frozen': tray_states[tray_id]['is_frozen'],
+        'active_cubes': list(tray_states[tray_id]['active_cubes']),
+        'frozen_at': tray_states[tray_id]['frozen_at'].isoformat(),
+        'expires_at': tray_states[tray_id]['expires_at'].isoformat()
+    })
 
 @bp.route('/api/tray-states')
 def get_tray_states():
