@@ -1,4 +1,6 @@
 from flask import Flask, render_template
+from .auth import login_required
+
 import os
 
 def create_app(test_config=None):
@@ -27,6 +29,7 @@ def create_app(test_config=None):
         return render_template('index.html')
 
     @app.route('/ice')
+    @login_required
     def ice():
         return render_template('ice.html')
 

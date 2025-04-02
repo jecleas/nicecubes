@@ -62,8 +62,10 @@ async function toggleBlock(element) {
     const trayId = tray.id;
     const cubeIndex = Array.from(tray.children).indexOf(element);
     
+    // If tray frozen then stop
     if (trayStates[trayId]?.is_frozen) return;
     
+    // tray not frozen then toggle cube
     const response = await fetch('/api/toggle-cube', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

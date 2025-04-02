@@ -35,6 +35,10 @@ def init_db():
             'INSERT INTO user (username) VALUES (?)',
             ("Mia",)
         )
+        db.execute(
+            'INSERT INTO user (username) VALUES (?)',
+            ("Olivia",)
+        )
         db.commit()
     except sqlite3.IntegrityError:
         pass  # Users already exist
