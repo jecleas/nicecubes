@@ -29,7 +29,7 @@ def login():
 
     return render_template('auth/login.html')
 
-@bp.route('/unathorized')
+@bp.route('/unauthorized')
 def unauthorized():
     return render_template('auth/unauthorized.html')
 
