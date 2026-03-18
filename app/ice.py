@@ -1,5 +1,6 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session, g
 from datetime import datetime, timedelta
+from app.db import get_db
 
 bp = Blueprint('ice', __name__)
 tray_states = {
@@ -19,6 +20,9 @@ tray_states = {
 
 @bp.route('/api/toggle-cube', methods=['POST'])
 def toggle_cube():
+    if g.user is None:
+        return jsonify({'error': 'Not authenticated.'}), 401
+
     data = request.get_json()
     tray_id = data['trayId']
     cube_index = data['cubeIndex']
@@ -28,6 +32,13 @@ def toggle_cube():
             tray_states[tray_id]['active_cubes'].remove(cube_index)
         else:
             tray_states[tray_id]['active_cubes'].add(cube_index)
+            # Track stat: cube was toggled ON
+            db = get_db()
+            db.execute(
+                'UPDATE user_stats SET cubes_created = cubes_created + 1 WHERE user_id = ?',
+                (g.user['id'],)
+            )
+            db.commit()
     
     return jsonify({
         'active_cubes': list(tray_states[tray_id]['active_cubes']),
@@ -36,6 +47,9 @@ def toggle_cube():
 
 @bp.route('/api/freeze-tray', methods=['POST'])
 def freeze_tray():
+    if g.user is None:
+        return jsonify({'error': 'Not authenticated.'}), 401
+
     data = request.get_json()
     tray_id = data['trayId']
     current_time = datetime.now()
@@ -43,6 +57,15 @@ def freeze_tray():
     tray_states[tray_id]['is_frozen'] = True
     tray_states[tray_id]['frozen_at'] = current_time
     tray_states[tray_id]['expires_at'] = current_time + timedelta(hours=4)
+
+    # Track stats: count active cubes in this tray, then mark tray as frozen
+    frozen_cube_count = len(tray_states[tray_id]['active_cubes'])
+    db = get_db()
+    db.execute(
+        'UPDATE user_stats SET trays_frozen = trays_frozen + 1, cubes_frozen = cubes_frozen + ? WHERE user_id = ?',
+        (frozen_cube_count, g.user['id'])
+    )
+    db.commit()
     
     return jsonify({
         'is_frozen': tray_states[tray_id]['is_frozen'],

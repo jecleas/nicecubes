@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@fontsource/pt-mono": "^5.2.8",
+    "@salt-ds/core": "^1.58.0",
+    "@salt-ds/icons": "^1.17.1",
+    "@salt-ds/theme": "^1.41.0"
+  }
+}

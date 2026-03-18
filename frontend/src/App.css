@@ -1,0 +1,86 @@
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--salt-container-primary-background);
+  color: var(--salt-text-primary-foreground);
+  font-family: "Open Sans", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+#root {
+  width: 100%;
+}
+
+.appShell {
+  min-height: 100vh;
+  background: var(--salt-container-primary-background);
+  color: var(--salt-text-primary-foreground);
+}
+
+.appHeader {
+  border-bottom: 1px solid var(--salt-separator-color-secondary);
+  background: color-mix(in srgb, var(--salt-container-primary-background) 96%, var(--salt-accent-background) 4%);
+}
+
+.appHeader__inner {
+  width: min(1180px, calc(100% - (2 * var(--salt-spacing-300))));
+  margin: 0 auto;
+  padding: var(--salt-spacing-150) 0;
+}
+
+.appMain {
+  width: min(1180px, calc(100% - (2 * var(--salt-spacing-300))));
+  margin: 0 auto;
+  padding: var(--salt-spacing-400) 0 var(--salt-spacing-600);
+}
+
+.appHero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--salt-spacing-100);
+  margin-bottom: var(--salt-spacing-400);
+  max-width: 56rem;
+}
+
+.appHero__eyebrow {
+  margin: 0;
+  color: var(--salt-text-secondary-foreground);
+  font-family: "PT Mono", monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.appHero__title {
+  margin: 0;
+  font-size: clamp(2.25rem, 3vw + 1rem, 3.75rem);
+  line-height: 1.05;
+}
+
+.appHero__description {
+  margin: 0;
+  color: var(--salt-text-secondary-foreground);
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+@media (max-width: 640px) {
+  .appHeader__inner,
+  .appMain {
+    width: min(100%, calc(100% - (2 * var(--salt-spacing-200))));
+  }
+
+  .appMain {
+    padding-top: var(--salt-spacing-300);
+  }
+}
