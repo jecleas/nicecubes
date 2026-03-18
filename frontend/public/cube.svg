@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 90" width="90" height="90" role="img" aria-label="NiceCubes cube">
+  <g transform="translate(8, 8)">
+    <polygon points="37,0 74,18 37,37 0,18" fill="#4B8BDE"/>
+    <polygon points="0,18 37,37 37,74 0,55" fill="#1A4A8F"/>
+    <polygon points="74,18 37,37 37,74 74,55" fill="#8BBFF5"/>
+  </g>
+</svg>

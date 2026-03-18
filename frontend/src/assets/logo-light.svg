@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 90" width="360" height="90" role="img" aria-label="NiceCubes">
+  <!-- Refined Isometric cube icon -->
+  <g transform="translate(8, 8)">
+    <!-- Top face (Deep Blue) -->
+    <polygon points="37,0 74,18 37,37 0,18" fill="#002D72"/>
+    <!-- Left face (Dark shadow) -->
+    <polygon points="0,18 37,37 37,74 0,55" fill="#001540"/>
+    <!-- Right face (Bright highlight) -->
+    <polygon points="74,18 37,37 37,74 74,55" fill="#1565C0"/>
+  </g>
+
+  <!-- Clean, heavy sans-serif wordmark in JPMorgan style (tight spacing, heavy weight) -->
+  <text 
+    x="100" 
+    y="60" 
+    font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif" 
+    font-weight="800" 
+    font-size="48" 
+    letter-spacing="-1.25" 
+    fill="#002D72">NiceCubes</text>
+</svg>

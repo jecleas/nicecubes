@@ -1,0 +1,168 @@
+.iceTrayBoard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--salt-spacing-300);
+}
+
+.iceTrayBoard__intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--salt-spacing-100);
+  max-width: 56rem;
+}
+
+.iceTrayBoard__eyebrow {
+  margin: 0;
+  color: var(--salt-text-secondary-foreground);
+  font-family: "PT Mono", monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.iceTrayBoard__heading {
+  margin: 0;
+  font-size: clamp(1.75rem, 2vw + 1rem, 2.5rem);
+  line-height: 1.1;
+}
+
+.iceTrayBoard__description {
+  margin: 0;
+  color: var(--salt-text-secondary-foreground);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.iceTrayBoard__alert {
+  padding: var(--salt-spacing-150) var(--salt-spacing-200);
+  border: 1px solid var(--salt-status-error-borderColor, var(--salt-accent-borderColor));
+  border-radius: var(--salt-palette-corner);
+  background: color-mix(in srgb, var(--salt-status-error-background, var(--salt-container-secondary-background)) 75%, transparent);
+  color: var(--salt-text-primary-foreground);
+}
+
+.iceTrayBoard__grid {
+  display: grid;
+  gap: var(--salt-spacing-300);
+  grid-template-columns: 1fr;
+  max-width: 1500px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.iceTrayBoard__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--salt-spacing-200);
+  padding: var(--salt-spacing-200);
+  border: 1px solid var(--salt-container-secondary-borderColor);
+  border-radius: calc(var(--salt-palette-corner) * 2);
+  background: var(--salt-container-primary-background);
+  box-shadow: var(--salt-overlayable-shadow);
+}
+
+.iceTrayBoard__sectionHeader {
+  display: none;
+}
+
+.iceTrayBoard__sectionTitle {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.iceTrayBoard__sectionStatus {
+  margin: var(--salt-spacing-50) 0 0;
+  color: var(--salt-text-secondary-foreground);
+}
+
+.iceTrayBoard__stateBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 4.5rem;
+  padding: var(--salt-spacing-50) var(--salt-spacing-100);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--salt-accent-background) 18%, transparent);
+  color: var(--salt-text-primary-foreground);
+  font-family: "PT Mono", monospace;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.iceTrayBoard__stateBadge--frozen {
+  background: color-mix(in srgb, var(--salt-accent-background) 36%, transparent);
+}
+
+.iceTrayBoard__traySurface {
+  --ice-tray-columns: 6;
+  display: grid;
+  grid-template-columns: repeat(var(--ice-tray-columns), minmax(0, 1fr));
+  gap: calc(0.6vw + 6px);
+  padding: calc(1.2vw + 12px);
+  border: 1px solid var(--salt-container-secondary-borderColor);
+  border-radius: 15px;
+  background-color: var(--salt-container-secondary-background, #f0f0f0);
+}
+
+.iceTrayBoard__cube {
+  --saltInteractableCard-borderRadius: 6px;
+  aspect-ratio: 1;
+  width: 100%;
+  background-color: #ffffff !important;
+  border: calc(0.2vw + 2px) solid var(--salt-container-secondary-borderColor, #ddd) !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.iceTrayBoard__cube:hover:not(.iceTrayBoard__cube--disabled) {
+  transform: translateY(-2px);
+}
+
+.iceTrayBoard__cube--disabled {
+  cursor: not-allowed;
+}
+
+.iceTrayBoard__cube--active {
+  background-color: #b3d7ff !important;
+  border-color: #007bff !important;
+}
+
+.iceTrayBoard__cube--frozen.iceTrayBoard__cube--active {
+  background-color: #007bff !important;
+  border-color: #0056b3 !important;
+}
+
+.iceTrayBoard__cube--frozen:not(.iceTrayBoard__cube--active) {
+  background-color: #f0f8ff !important;
+  border-color: #4f96e8 !important;
+  opacity: 0.8;
+}
+
+.iceTrayBoard__cubeInset {
+  display: none;
+}
+
+.iceTrayBoard__actions {
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .iceTrayBoard__section {
+    padding: var(--salt-spacing-200);
+  }
+
+  .iceTrayBoard__sectionHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 560px) {
+  .iceTrayBoard__traySurface {
+    padding: var(--salt-spacing-150);
+    gap: var(--salt-spacing-100);
+  }
+}
