@@ -1,0 +1,35 @@
+/* Desktop nav: visible above 640px */
+.appNav--desktop {
+  display: flex;
+}
+
+/* Mobile toggle: hidden above 640px */
+.appNav--mobileToggle {
+  display: none;
+  align-items: center;
+  gap: var(--salt-spacing-50);
+}
+
+/* Mobile dropdown */
+.appNav--mobileMenu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--salt-spacing-100);
+  padding: var(--salt-spacing-150) var(--salt-spacing-200);
+  border-top: 1px solid var(--salt-separator-color-secondary);
+}
+
+.appNav--mobileUser {
+  padding: var(--salt-spacing-50) 0;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .appNav--desktop {
+    display: none;
+  }
+
+  .appNav--mobileToggle {
+    display: flex;
+  }
+}

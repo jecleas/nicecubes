@@ -25,6 +25,12 @@ body {
   min-height: 100vh;
   background: var(--salt-container-primary-background);
   color: var(--salt-text-primary-foreground);
+  opacity: 1;
+  transition: opacity 0.2s ease-in;
+}
+
+.appShell--loading {
+  opacity: 0;
 }
 
 .appHeader {

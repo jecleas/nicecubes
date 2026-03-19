@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type CSSProperties, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { Button, InteractableCard } from "@salt-ds/core";
 import "./IceTray.css";
 
@@ -20,6 +20,9 @@ interface IceTrayProps {
   apiBasePath?: string;
   pollIntervalMs?: number;
 }
+
+/** How long (ms) after a user action to skip polling, preventing state flicker. */
+const SKIP_POLL_WINDOW = 3000;
 
 const EMPTY_TRAY_STATE: TrayState = {
   active_cubes: [],
@@ -50,7 +53,7 @@ function getDefaultColumnCount(cubeCount: number) {
   return Math.max(1, Math.ceil(Math.sqrt(cubeCount)));
 }
 
-export function IceTray({ trays, apiBasePath = "", pollIntervalMs = 2000 }: IceTrayProps) {
+export function IceTray({ trays, apiBasePath = "", pollIntervalMs = 500 }: IceTrayProps) {
   const [trayStates, setTrayStates] = useState<Record<string, TrayState>>(() =>
     Object.fromEntries(trays.map((tray) => [tray.id, EMPTY_TRAY_STATE])),
   );
@@ -58,6 +61,10 @@ export function IceTray({ trays, apiBasePath = "", pollIntervalMs = 2000 }: IceT
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [freezingTrayIds, setFreezingTrayIds] = useState<string[]>([]);
   const [pendingCubeKeys, setPendingCubeKeys] = useState<string[]>([]);
+
+  // Track the last time a user action (toggle/freeze) got a response,
+  // so we can skip polls that would overwrite the fresh state.
+  const lastActionAt = useRef(0);
 
   useEffect(() => {
     setTrayStates((currentStates) => {
@@ -76,6 +83,12 @@ export function IceTray({ trays, apiBasePath = "", pollIntervalMs = 2000 }: IceT
   const syncTrayStates = useCallback(
     async (options?: { silent?: boolean }) => {
       const silent = options?.silent ?? false;
+
+      // Skip this poll if we recently got a fresh response from a user action.
+      // This prevents the poll from overwriting optimistic/confirmed state.
+      if (silent && Date.now() - lastActionAt.current < SKIP_POLL_WINDOW) {
+        return;
+      }
 
       try {
         const response = await fetch(buildApiUrl(apiBasePath, "/api/tray-states"));
@@ -147,6 +160,7 @@ export function IceTray({ trays, apiBasePath = "", pollIntervalMs = 2000 }: IceT
 
         const payload = (await response.json()) as Partial<TrayState>;
 
+        lastActionAt.current = Date.now();
         setTrayStates((currentStates) => ({
           ...currentStates,
           [trayId]: normalizeTrayState({
@@ -184,6 +198,7 @@ export function IceTray({ trays, apiBasePath = "", pollIntervalMs = 2000 }: IceT
 
         const payload = (await response.json()) as Partial<TrayState>;
 
+        lastActionAt.current = Date.now();
         setTrayStates((currentStates) => ({
           ...currentStates,
           [trayId]: normalizeTrayState({
