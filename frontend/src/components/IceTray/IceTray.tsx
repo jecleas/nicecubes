@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { Button, InteractableCard } from "@salt-ds/core";
 import "./IceTray.css";
 
@@ -12,7 +12,9 @@ export interface TrayDefinition {
 interface TrayState {
   active_cubes: number[];
   is_frozen: boolean;
+  frozen_at: string | null;
   expires_at: string | null;
+  revision: number;
 }
 
 interface IceTrayProps {
@@ -21,13 +23,12 @@ interface IceTrayProps {
   pollIntervalMs?: number;
 }
 
-/** How long (ms) after a user action to skip polling, preventing state flicker. */
-const SKIP_POLL_WINDOW = 3000;
-
 const EMPTY_TRAY_STATE: TrayState = {
   active_cubes: [],
   is_frozen: false,
+  frozen_at: null,
   expires_at: null,
+  revision: 0,
 };
 
 function buildApiUrl(apiBasePath: string, path: string) {
@@ -45,15 +46,24 @@ function normalizeTrayState(state?: Partial<TrayState>): TrayState {
       ? state.active_cubes.filter((cubeIndex): cubeIndex is number => Number.isInteger(cubeIndex))
       : [],
     is_frozen: Boolean(state?.is_frozen),
+    frozen_at: typeof state?.frozen_at === "string" ? state.frozen_at : null,
     expires_at: typeof state?.expires_at === "string" ? state.expires_at : null,
+    revision: typeof state?.revision === "number" ? state.revision : 0,
   };
+}
+
+function mergeTrayState(currentState: TrayState | undefined, incomingState?: Partial<TrayState>): TrayState {
+  const nextState = normalizeTrayState(incomingState ?? currentState);
+  const currentRevision = currentState?.revision ?? 0;
+
+  return nextState.revision >= currentRevision ? nextState : currentState ?? EMPTY_TRAY_STATE;
 }
 
 function getDefaultColumnCount(cubeCount: number) {
   return Math.max(1, Math.ceil(Math.sqrt(cubeCount)));
 }
 
-export function IceTray({ trays, apiBasePath = "", pollIntervalMs = 500 }: IceTrayProps) {
+export function IceTray({ trays, apiBasePath = "", pollIntervalMs = 2000 }: IceTrayProps) {
   const [trayStates, setTrayStates] = useState<Record<string, TrayState>>(() =>
     Object.fromEntries(trays.map((tray) => [tray.id, EMPTY_TRAY_STATE])),
   );
@@ -61,10 +71,6 @@ export function IceTray({ trays, apiBasePath = "", pollIntervalMs = 500 }: IceTr
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [freezingTrayIds, setFreezingTrayIds] = useState<string[]>([]);
   const [pendingCubeKeys, setPendingCubeKeys] = useState<string[]>([]);
-
-  // Track the last time a user action (toggle/freeze) got a response,
-  // so we can skip polls that would overwrite the fresh state.
-  const lastActionAt = useRef(0);
 
   useEffect(() => {
     setTrayStates((currentStates) => {
@@ -84,12 +90,6 @@ export function IceTray({ trays, apiBasePath = "", pollIntervalMs = 500 }: IceTr
     async (options?: { silent?: boolean }) => {
       const silent = options?.silent ?? false;
 
-      // Skip this poll if we recently got a fresh response from a user action.
-      // This prevents the poll from overwriting optimistic/confirmed state.
-      if (silent && Date.now() - lastActionAt.current < SKIP_POLL_WINDOW) {
-        return;
-      }
-
       try {
         const response = await fetch(buildApiUrl(apiBasePath, "/api/tray-states"));
 
@@ -103,7 +103,7 @@ export function IceTray({ trays, apiBasePath = "", pollIntervalMs = 500 }: IceTr
           const nextStates: Record<string, TrayState> = {};
 
           trayIds.forEach((trayId) => {
-            nextStates[trayId] = normalizeTrayState(payload[trayId] ?? currentStates[trayId]);
+            nextStates[trayId] = mergeTrayState(currentStates[trayId], payload[trayId]);
           });
 
           return nextStates;
@@ -160,13 +160,9 @@ export function IceTray({ trays, apiBasePath = "", pollIntervalMs = 500 }: IceTr
 
         const payload = (await response.json()) as Partial<TrayState>;
 
-        lastActionAt.current = Date.now();
         setTrayStates((currentStates) => ({
           ...currentStates,
-          [trayId]: normalizeTrayState({
-            ...currentStates[trayId],
-            ...payload,
-          }),
+          [trayId]: mergeTrayState(currentStates[trayId], payload),
         }));
         setErrorMessage(null);
       } catch (error) {
@@ -198,13 +194,9 @@ export function IceTray({ trays, apiBasePath = "", pollIntervalMs = 500 }: IceTr
 
         const payload = (await response.json()) as Partial<TrayState>;
 
-        lastActionAt.current = Date.now();
         setTrayStates((currentStates) => ({
           ...currentStates,
-          [trayId]: normalizeTrayState({
-            ...currentStates[trayId],
-            ...payload,
-          }),
+          [trayId]: mergeTrayState(currentStates[trayId], payload),
         }));
         setErrorMessage(null);
       } catch (error) {
