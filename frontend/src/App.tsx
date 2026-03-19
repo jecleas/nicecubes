@@ -29,7 +29,7 @@ function AppContent() {
   if (isLoading) {
     return (
       <SaltProvider mode={mode}>
-        <div className="appShell" />
+        <div className="appShell appShell--loading" />
       </SaltProvider>
     );
   }
