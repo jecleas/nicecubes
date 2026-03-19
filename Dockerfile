@@ -33,4 +33,5 @@ ENV DATABASE_PATH=/data/app.sqlite
 EXPOSE 8080
 
 # Run with gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "app:create_app()"]
+# Keep a single worker so in-memory shared tray state stays consistent for all users.
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "app:create_app()"]
