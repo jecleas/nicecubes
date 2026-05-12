@@ -16,8 +16,7 @@ function AppContent() {
 
   const homepageTrays = useMemo<TrayDefinition[]>(
     () => [
-      { id: "tray1", label: "Tray 1", cubeCount: 12, columns: 6 },
-      { id: "tray2", label: "Tray 2", cubeCount: 12, columns: 6 },
+      { id: "tray1", label: "Tray", cubeCount: 12, columns: 6 },
     ],
     [],
   );
@@ -60,7 +59,7 @@ function AppContent() {
             <>
               <section className="appHero">
                 <p className="appHero__eyebrow">Nice Cubes</p>
-                <h1 className="appHero__title">Ice Cube Trays</h1>
+                <h1 className="appHero__title">L16 Ice Cube Tray</h1>
               </section>
               <IceTray trays={homepageTrays} />
             </>

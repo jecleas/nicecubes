@@ -18,7 +18,6 @@ def create_tray_state():
 
 tray_states = {
     'tray1': create_tray_state(),
-    'tray2': create_tray_state(),
 }
 
 tray_states_lock = Lock()
