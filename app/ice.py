@@ -1,27 +1,72 @@
-from flask import Blueprint, jsonify, request, session, g
+import json
 from datetime import datetime, timedelta
 from threading import Lock
-from app.db import get_db
+
+from flask import Blueprint, jsonify, request, g
+
+from app.db import get_db, seed_trays
 
 bp = Blueprint('ice', __name__)
 
+# SQLite is the source of truth (see DATABASE_PATH). This lock only covers
+# the read-modify-write inside one process so two requests cannot drop a cube.
+tray_states_lock = Lock()
 
-def create_tray_state():
+
+def _parse_dt(value):
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        return value
+    return datetime.fromisoformat(value)
+
+
+def _format_dt(value):
+    if value is None:
+        return None
+    return value.isoformat()
+
+
+def _row_to_state(row):
     return {
-        'active_cubes': set(),  # Store indices of active cubes
-        'is_frozen': False,
-        'frozen_at': None,
-        'expires_at': None,
-        'revision': 0,
+        'active_cubes': set(json.loads(row['active_cubes'] or '[]')),
+        'is_frozen': bool(row['is_frozen']),
+        'frozen_at': _parse_dt(row['frozen_at']),
+        'expires_at': _parse_dt(row['expires_at']),
+        'revision': row['revision'],
     }
 
 
-tray_states = {
-    'tray1': create_tray_state(),
-    'tray2': create_tray_state(),
-}
+def _load_tray_state(db, tray_id):
+    row = db.execute(
+        '''
+        SELECT id, active_cubes, is_frozen, frozen_at, expires_at, revision
+        FROM tray_state
+        WHERE id = ?
+        ''',
+        (tray_id,),
+    ).fetchone()
+    if row is None:
+        return None
+    return _row_to_state(row)
 
-tray_states_lock = Lock()
+
+def _save_tray_state(db, tray_id, state):
+    db.execute(
+        '''
+        UPDATE tray_state
+        SET active_cubes = ?, is_frozen = ?, frozen_at = ?, expires_at = ?, revision = ?
+        WHERE id = ?
+        ''',
+        (
+            json.dumps(sorted(state['active_cubes'])),
+            1 if state['is_frozen'] else 0,
+            _format_dt(state['frozen_at']),
+            _format_dt(state['expires_at']),
+            state['revision'],
+            tray_id,
+        ),
+    )
 
 
 def prune_expired_tray_state(state, current_time):
@@ -30,6 +75,8 @@ def prune_expired_tray_state(state, current_time):
         state['frozen_at'] = None
         state['expires_at'] = None
         state['revision'] += 1
+        return True
+    return False
 
 
 def serialize_tray_state(state):
@@ -42,10 +89,59 @@ def serialize_tray_state(state):
     }
 
 
-def get_tray_snapshot(tray_id, current_time):
-    state = tray_states[tray_id]
-    prune_expired_tray_state(state, current_time)
+def _with_tray(tray_id, current_time, mutator):
+    """Load one tray, drop an expired freeze, apply mutator, and persist changes.
+
+    mutator(db, state) returns True when it changes the tray (or writes other
+    rows that must be committed with it). Returns the serialized snapshot, or
+    None when the tray id is unknown.
+    """
+    db = get_db()
+    if seed_trays(db):
+        db.commit()
+
+    state = _load_tray_state(db, tray_id)
+    if state is None:
+        return None
+
+    changed = prune_expired_tray_state(state, current_time)
+    if mutator is not None and mutator(db, state):
+        changed = True
+    if changed:
+        _save_tray_state(db, tray_id, state)
+        db.commit()
     return serialize_tray_state(state)
+
+
+def _toggle_cube(db, state, cube_index):
+    if state['is_frozen']:
+        return False
+
+    if cube_index in state['active_cubes']:
+        state['active_cubes'].remove(cube_index)
+    else:
+        state['active_cubes'].add(cube_index)
+        db.execute(
+            'UPDATE user_stats SET cubes_created = cubes_created + 1 WHERE user_id = ?',
+            (g.user['id'],)
+        )
+    state['revision'] += 1
+    return True
+
+
+def _freeze_tray(db, state, current_time):
+    state['is_frozen'] = True
+    state['frozen_at'] = current_time
+    state['expires_at'] = current_time + timedelta(hours=4)
+    state['revision'] += 1
+
+    frozen_cube_count = len(state['active_cubes'])
+    db.execute(
+        'UPDATE user_stats SET trays_frozen = trays_frozen + 1, cubes_frozen = cubes_frozen + ? WHERE user_id = ?',
+        (frozen_cube_count, g.user['id'])
+    )
+    return True
+
 
 @bp.route('/api/toggle-cube', methods=['POST'])
 def toggle_cube():
@@ -57,26 +153,15 @@ def toggle_cube():
     cube_index = data['cubeIndex']
 
     with tray_states_lock:
-        state = tray_states[tray_id]
-        prune_expired_tray_state(state, datetime.now())
+        snapshot = _with_tray(
+            tray_id,
+            datetime.now(),
+            lambda db, state: _toggle_cube(db, state, cube_index),
+        )
 
-        if not state['is_frozen']:
-            if cube_index in state['active_cubes']:
-                state['active_cubes'].remove(cube_index)
-                state['revision'] += 1
-            else:
-                state['active_cubes'].add(cube_index)
-                state['revision'] += 1
-
-                # Track stat: cube was toggled ON
-                db = get_db()
-                db.execute(
-                    'UPDATE user_stats SET cubes_created = cubes_created + 1 WHERE user_id = ?',
-                    (g.user['id'],)
-                )
-                db.commit()
-
-        return jsonify(get_tray_snapshot(tray_id, datetime.now()))
+    if snapshot is None:
+        return jsonify({'error': 'Unknown tray.'}), 404
+    return jsonify(snapshot)
 
 @bp.route('/api/freeze-tray', methods=['POST'])
 def freeze_tray():
@@ -88,32 +173,29 @@ def freeze_tray():
     current_time = datetime.now()
 
     with tray_states_lock:
-        state = tray_states[tray_id]
-        prune_expired_tray_state(state, current_time)
-        state['is_frozen'] = True
-        state['frozen_at'] = current_time
-        state['expires_at'] = current_time + timedelta(hours=4)
-        state['revision'] += 1
-
-        # Track stats: count active cubes in this tray, then mark tray as frozen
-        frozen_cube_count = len(state['active_cubes'])
-        db = get_db()
-        db.execute(
-            'UPDATE user_stats SET trays_frozen = trays_frozen + 1, cubes_frozen = cubes_frozen + ? WHERE user_id = ?',
-            (frozen_cube_count, g.user['id'])
+        snapshot = _with_tray(
+            tray_id,
+            current_time,
+            lambda db, state: _freeze_tray(db, state, current_time),
         )
-        db.commit()
 
-        return jsonify(get_tray_snapshot(tray_id, current_time))
+    if snapshot is None:
+        return jsonify({'error': 'Unknown tray.'}), 404
+    return jsonify(snapshot)
 
 @bp.route('/api/tray-states')
 def get_tray_states():
     current_time = datetime.now()
 
     with tray_states_lock:
+        db = get_db()
+        if seed_trays(db):
+            db.commit()
+        tray_ids = [
+            row['id'] for row in db.execute('SELECT id FROM tray_state ORDER BY id').fetchall()
+        ]
         response = {}
-
-        for tray_id in tray_states:
-            response[tray_id] = get_tray_snapshot(tray_id, current_time)
+        for tray_id in tray_ids:
+            response[tray_id] = _with_tray(tray_id, current_time, None)
 
         return jsonify(response)

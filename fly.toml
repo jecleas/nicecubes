@@ -13,6 +13,11 @@ primary_region = 'syd'
   FLASK_APP = 'app'
   FLASK_ENV = 'production'
 
+# Persistent disk for /data/app.sqlite (users, stats, and ice tray state).
+# Auto-stop is safe because that file lives on this volume, not in machine memory.
+# Create the volume once if `fly volumes list --app nicecubes` does not already
+# show one named "data" in syd (must match primary_region):
+#   fly volumes create data --region syd --size 1 --app nicecubes
 [[mounts]]
   source = 'data'
   destination = '/data'
