@@ -22,7 +22,8 @@ COPY app/ ./app/
 # Copy built React frontend into app/static/dist
 COPY --from=frontend-build /frontend/dist ./app/static/dist
 
-# Create instance directory for SQLite (use a volume in production)
+# Image-level fallback for local `docker run` without a volume. On Fly the
+# volume hides this directory; the app creates it again on first boot if needed.
 RUN mkdir -p /data
 
 # Set environment variables
@@ -32,6 +33,7 @@ ENV DATABASE_PATH=/data/app.sqlite
 
 EXPOSE 8080
 
-# Run with gunicorn
-# Keep a single worker so in-memory shared tray state stays consistent for all users.
+# Run with gunicorn.
+# SQLite on the mounted volume is the source of truth for users, stats, and trays.
+# One worker keeps writes to that file simple.
 CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "app:create_app()"]
